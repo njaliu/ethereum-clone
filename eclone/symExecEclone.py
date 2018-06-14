@@ -19,6 +19,7 @@ from vargenerator import *
 from ethereum_data import *
 from basicblock import BasicBlock
 from instruction import Instruction # aliu
+#import ecloneAnalysis # aliu
 from analysis import *
 from test_evm.global_test_params import (TIME_OUT, UNKNOWN_INSTRUCTION,
                                          EXCEPTION, PICKLE_PATH)
@@ -557,6 +558,7 @@ def full_sym_exec():
     #six.print_(storage_load);
     #six.print_(storage_store);
     print_cfg()
+    #ecloneAnalysis.compute_semantic(vertices)
     #return 
 
 
