@@ -106,6 +106,28 @@ def write_disasm_file(processed_evm_file, disasm_file):
     with open(disasm_file, 'w') as of:
         of.write(disasm_out)
 
+# aliu: analysis entry for semantic clone detection
+def analyze_clone(processed_evm_file_q, disasm_file_q, processed_evm_file_t, disasm_file_t, source_map = None):
+    disasm_out_q = ""
+    disasm_out_t = ""
+    try:
+        disasm_p_q = subprocess.Popen(
+            ["evm", "disasm", processed_evm_file_q], stdout=subprocess.PIPE)
+        disasm_out_q = disasm_p_q.communicate()[0].decode()
+        disasm_p_t = subprocess.Popen(
+            ["evm", "disasm", processed_evm_file_t], stdout=subprocess.PIPE)
+        disasm_out_t = disasm_p_t.communicate()[0].decode()
+    except:
+        logging.critical("Disassembly failed.")
+        exit()
+
+    with open(disasm_file_q, 'w') as ofq:
+        ofq.write(disasm_out_q)
+    with open(disasm_file_t, 'w') as oft:
+        oft.write(disasm_out_t)
+
+    # Run symExecEclone
+    return symExecEclone.similarity_scoring(disasm_file_q, disasm_file_t)
 
 def analyze(processed_evm_file, disasm_file, source_map = None):
     disasm_out = ""
@@ -146,6 +168,8 @@ def main():
 
     group.add_argument("-s",  "--source",    type=str, help="local source file name. Solidity by default. Use -b to process evm instead. Use stdin to read from stdin.")
     group.add_argument("-ru", "--remoteURL", type=str, help="Get contract from remote URL. Solidity by default. Use -b to process evm instead.", dest="remote_URL")
+    # aliu: clone cmd option
+    group.add_argument( "-cl", "--clone", type=str, help="Detect semantic clones of smart contracts", nargs=2)
 
     parser.add_argument("--version", action="version", version="oyente version 0.2.7 - Commonwealth")
 
@@ -171,6 +195,8 @@ def main():
     parser.add_argument( "-sj",  "--standard-json",       help="Support Standard JSON input", action="store_true")
     parser.add_argument( "-gb",  "--globalblockchain",    help="Integrate with the global ethereum blockchain", action="store_true")
     parser.add_argument( "-gtc", "--generate-test-cases", help="Generate test cases each branch of symbolic execution tree", action="store_true")
+
+    
 
     args = parser.parse_args()
 
@@ -222,7 +248,38 @@ def main():
         with open(filename, 'w') as f:
             f.write(code)
 
-    if args.bytecode:
+    # aliu: handling the --clone cmd option, TODO HERE
+    if args.clone:
+        query = args.clone[0]
+        target = args.clone[1]
+        processed_evm_file_query = query + '.1'
+        processed_evm_file_target = target + '.1'
+        disasm_file_query = query + '.disasm'
+        disasm_file_target = target + '.disasm'
+
+        
+        with open(query) as fq:
+            evm_query = fq.read()
+        with open(processed_evm_file_query, 'w') as fq:
+            fq.write(removeSwarmHash(evm_query))
+
+        with open(target) as ft:
+            evm_target = ft.read()
+        with open(processed_evm_file_target, 'w') as ft:
+            ft.write(removeSwarmHash(evm_target))
+
+        analyze_clone(processed_evm_file_query, disasm_file_query, processed_evm_file_target, disasm_file_target)
+
+        remove_temporary_file(disasm_file_query)
+        remove_temporary_file(processed_evm_file_query)
+        remove_temporary_file(disasm_file_target)
+        remove_temporary_file(processed_evm_file_target)
+        
+
+        logging.info("clone A: " + args.clone[0])
+        logging.info("clone B: " + args.clone[1])
+    # aliu: when --clone is not set  
+    elif args.bytecode:
         processed_evm_file = args.source + '.1'
         disasm_file = args.source + '.disasm'
         with open(args.source) as f:

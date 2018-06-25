@@ -19,7 +19,7 @@ from vargenerator import *
 from ethereum_data import *
 from basicblock import BasicBlock
 from instruction import Instruction # aliu
-#import ecloneAnalysis # aliu
+import ecloneAnalysis # aliu
 from analysis import *
 from test_evm.global_test_params import (TIME_OUT, UNKNOWN_INSTRUCTION,
                                          EXCEPTION, PICKLE_PATH)
@@ -226,6 +226,7 @@ def change_format():
         disasm_file.write("\n".join(file_contents))
 
 def build_cfg_and_analyze():
+    out = {}
     change_format()
     with open(c_name, 'r') as disasm_file:
         disasm_file.readline()  # Remove first line
@@ -234,7 +235,8 @@ def build_cfg_and_analyze():
         construct_bb()
         construct_static_edges()
         # print_cfg() 
-        full_sym_exec()  # jump targets are constructed on the fly
+        out = full_sym_exec()  # jump targets are constructed on the fly
+    return out
 
 
 def print_cfg():
@@ -557,9 +559,10 @@ def full_sym_exec():
     # aliu
     #six.print_(storage_load);
     #six.print_(storage_store);
-    print_cfg()
-    #ecloneAnalysis.compute_semantic(vertices)
-    #return 
+    #print_cfg()
+    semantics = ecloneAnalysis.compute_semantic(vertices)
+    print len(semantics.keys())
+    return semantics 
 
 
 # Symbolically executing a block from the start address
@@ -2416,6 +2419,54 @@ def handler(signum, frame):
     if global_params.UNIT_TEST == 2 or global_params.UNIT_TEST == 3:
         exit(TIME_OUT)
     raise Exception("timeout")
+
+def similarity_scoring(contract1, contract2):
+    contract_semantic_1 = generate_semantics(contract1)
+    contract_semantic_2 = generate_semantics(contract2)
+    similarity_score = ecloneAnalysis.contract_similarity(contract_semantic_1, contract_semantic_2)
+    log.info("Similarity Score: " + str(similarity_score))
+    return similarity_score
+
+def generate_semantics(contract, _source_map = None):
+    global c_name
+    #global c_name_sol
+    global source_map
+    global results
+
+    c_name = contract
+    #c_name_sol = contract_sol
+    source_map = _source_map
+
+    semantics_out = {}
+
+    check_unit_test_file()
+    initGlobalVars()
+    set_cur_file(c_name[4:] if len(c_name) > 5 else c_name)
+    start = time.time()
+    signal.signal(signal.SIGALRM, handler)
+    if global_params.UNIT_TEST == 2 or global_params.UNIT_TEST == 3:
+        global_params.GLOBAL_TIMEOUT = global_params.GLOBAL_TIMEOUT_TEST
+    signal.alarm(global_params.GLOBAL_TIMEOUT)
+    #atexit.register(closing_message)
+
+    log.info("Generating semantics, please wait...")
+
+    if not isTesting():
+        log.info("\t============ Results ===========")
+
+    try:
+        semantics_out = build_cfg_and_analyze()
+        log.debug("Done Symbolic execution")
+        # print_cfg()
+    except Exception as e:
+        if global_params.UNIT_TEST == 2 or global_params.UNIT_TEST == 3:
+            log.exception(e)
+            exit(EXCEPTION)
+        traceback.print_exc()
+        raise e
+    finally:
+        return semantics_out
+    signal.alarm(0)
 
 def main(contract, contract_sol, _source_map = None):
     global c_name

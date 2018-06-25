@@ -39,6 +39,8 @@ class MetaData:
     def get_memory_value(self):
         return self.memory
 
+    def get_vector(self):
+        return [self.arithmetic, self.logic, self.env, self.chain, self.stack, self.memory]
     '''
     def display(self):
         six.print_(self.inst)
