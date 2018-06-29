@@ -268,7 +268,8 @@ def main():
         with open(processed_evm_file_target, 'w') as ft:
             ft.write(removeSwarmHash(evm_target))
 
-        analyze_clone(processed_evm_file_query, disasm_file_query, processed_evm_file_target, disasm_file_target)
+        # aliu: {"score": x, "nquery": y, "ntarget": z}
+        result_json = analyze_clone(processed_evm_file_query, disasm_file_query, processed_evm_file_target, disasm_file_target)
 
         remove_temporary_file(disasm_file_query)
         remove_temporary_file(processed_evm_file_query)
@@ -278,6 +279,8 @@ def main():
 
         logging.info("clone A: " + args.clone[0])
         logging.info("clone B: " + args.clone[1])
+
+        return result_json
     # aliu: when --clone is not set  
     elif args.bytecode:
         processed_evm_file = args.source + '.1'

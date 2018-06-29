@@ -2425,7 +2425,8 @@ def similarity_scoring(contract1, contract2):
     contract_semantic_2 = generate_semantics(contract2)
     similarity_score = ecloneAnalysis.contract_similarity(contract_semantic_1, contract_semantic_2)
     log.info("Similarity Score: " + str(similarity_score))
-    return similarity_score
+    #return similarity_score
+    return {"score": similarity_score, "nquery": len(contract_semantic_1.keys()), "ntarget": len(contract_semantic_2.keys())}
 
 def generate_semantics(contract, _source_map = None):
     global c_name

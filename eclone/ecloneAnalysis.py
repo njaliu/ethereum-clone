@@ -1,4 +1,5 @@
 import logging
+import math
 from metadata import MetaData
 from birthmark import BirthMark
 
@@ -26,7 +27,7 @@ OPCODE_TYPE = {
 }
 
 # Parameter set
-sigma = 1.0
+sigma = 0.1
 
 def analyzeBlock(block):
     path_condition_meta = 0
@@ -93,6 +94,8 @@ def analyzeBlock(block):
                 memory_def = False
 
         if instr_type == STORAGE_OP_TYPE:
+            if not hasattr(instr, 'storage'):
+                continue
             storage_addr = str(instr.get_storage_access()["storage"])
             if hasattr(Qs, storage_addr):
                 queue = Qs[storage_addr]
@@ -260,7 +263,15 @@ def vector_similarity(mark1, mark2):
         top += abs(mark1[i] - mark2[i])
         bottom += max(mark1[i], mark2[i])
 
+    # aliu: all zero
+    if bottom == 0:
+        return 0
+
     return top / float(bottom)
+
+# aliu: sigmoid function
+def sigmoid(x):
+  return 1 / (1 + math.exp(-(x-0.5)))
 
 # aliu: (1 - db) / ( (1 - db ) + sigma*dm )
 # 0: unsimilar. 1: similar
@@ -277,13 +288,23 @@ def block_similarity(block1, block2):
 
 # aliu: query is a block, target is a contract
 def compute_best_match(query, target):
-    best = -1
+    best = -100
+    H0 = 0
+    for b in target.keys():
+        H0_score = block_similarity(query, target[b])
+        H0 += sigmoid(H0_score)
+    if len(target.keys()) == 0:
+        p_H0 = 1
+    else:
+        p_H0 = H0 / float(len(target.keys()))
+
     for b in target.keys():
         score = block_similarity(query, target[b])
-        if score > best:
-            best = score
+        p = sigmoid(score)
+        if p > best:
+            best = p
 
-    return best
+    return math.log(best / float(p_H0))
 
 # aliu: contract1/contract2 - Dictionary: {block: {"metadata": meta_data, "birthmark": birth_mark}}
 def contract_similarity(contract1, contract2):
