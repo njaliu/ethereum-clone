@@ -7,7 +7,7 @@ import eclone
 evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result"
 evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
 
-N_contracts = 100
+N_contracts = 1
 THRESHOLD = 0.5
 
 def fse_eval():
@@ -20,7 +20,7 @@ def fse_eval():
         for file in files:
             sys.argv = argv_bak
             if count >= N_contracts:
-                return
+                return {"correct": correct, "total": count}
             print(len(path) * '---', file)
             #print(os.path.abspath(root + '/' + file))
             query = os.path.abspath(root + '/' + file)
@@ -44,8 +44,12 @@ def fse_eval():
 
             if qq_json["score"] == 0:
             	continue
-            	
-            if (qq_json["score"] - qt_json["score"]) / qq_json["score"] <= THRESHOLD:
+            
+            # aliu: query-target / query-query
+            relative_similarity = qt_json["score"] / qq_json["score"]
+
+            if relative_similarity >= THRESHOLD:
+            	print("Relative Similarity: " + str(relative_similarity))
                 print("Clone Found: " + query + ", " + target)
                 correct += 1
             else:
@@ -66,4 +70,5 @@ def fse_eval():
 
 
 if __name__ == '__main__':
-    fse_eval()
+    out = fse_eval()
+    print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
