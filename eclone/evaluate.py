@@ -2,13 +2,38 @@ import sys
 import os
 import copy
 import traceback
+import random
 import eclone
 
 evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result"
-evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
+#evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime"
+#evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
+evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
 
 N_contracts = 1
 THRESHOLD = 0.5
+
+
+def prepare_contracts():
+	noopt = []
+	contract_dirs = os.listdir(evm_dir)
+	random.shuffle(contract_dirs)
+	for i in range(10):
+		d = os.path.join(evm_dir, contract_dirs[i])
+		print d
+		fs = os.listdir(d)
+		if len(fs) == 0:
+			continue
+		else:
+			seed = random.randint(0, len(fs) - 1)
+			if fs[seed].endswith("bin-runtime"):
+				f = os.path.join(d, fs[seed])
+				noopt.append(f)
+ 
+	print noopt, len(noopt)
+	return noopt
+
+
 
 def fse_eval():
     count = 0
@@ -70,5 +95,6 @@ def fse_eval():
 
 
 if __name__ == '__main__':
-    out = fse_eval()
-    print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
+	prepare_contracts()
+    #out = fse_eval()
+    #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))

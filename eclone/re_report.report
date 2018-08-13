@@ -82,3 +82,4 @@ ples/mislock.sol:EtherBank4.evm.disasm
 ./score-lm/tests/SimpleBank.bin-runtime.disasm
 ./score-lm/tests/SimpleBank.bin-runtime.disasm
 ./score-lm/tests/SimpleBank.bin-runtime.disasm
+./score-lm/tests/SimpleBank.sol:SimpleBank.evm.disasm
