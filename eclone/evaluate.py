@@ -3,12 +3,14 @@ import os
 import copy
 import traceback
 import random
+import logging
 import eclone
 
 evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result"
 #evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime"
-#evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
-evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
+evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
+#evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
+dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset"
 
 N_contracts = 1
 THRESHOLD = 0.5
@@ -32,6 +34,31 @@ def prepare_contracts():
  
 	print noopt, len(noopt)
 	return noopt
+
+def prepare_dataset(contracts, data_file, n_false):
+	with open(data_file, 'a+') as f:
+		for i in range(0, len(contracts)):
+			f_noopt = contracts[i]
+			f_opt = f_noopt.replace(evm_dir, evm_opt_dir)
+			data_true = f_noopt + ',' + f_opt + ',1\n'
+			f.write(data_true)
+		for i in range(0, n_false):
+			f_1 = contracts[i]
+			f_1_base = os.path.basename(f_1)
+			s = random.randint(0, len(contracts))
+			f_2 = contracts[s]
+			f_2_base = os.path.basename(f_2)
+			while f_1_base == f_2_base:
+				s = random.randint(0, len(contracts))
+				f_2 = contracts[s]
+				f_2_base = os.path.basename(f_2)
+			f_2 = f_2.replace(evm_dir, evm_opt_dir)
+			data_false = f_1 + ',' + f_2 + ',0\n'
+			f.write(data_false)
+	f.close()
+	print "Evaluation dataset finished: " + data_file
+
+
 
 
 
@@ -95,6 +122,7 @@ def fse_eval():
 
 
 if __name__ == '__main__':
-	prepare_contracts()
+	picked = prepare_contracts()
+	prepare_dataset(picked, dataset_file, 4)
     #out = fse_eval()
     #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
