@@ -58,6 +58,43 @@ def prepare_dataset(contracts, data_file, n_false):
 	f.close()
 	print "Evaluation dataset finished: " + data_file
 
+def run_evaluation():
+	with open(dataset_file, 'r') as f:
+		count = 0
+		# TODO: tp,tn,fp,fn
+
+		
+		argv_bak = sys.argv
+		for line in f:
+			sys.argv = argv_bak
+
+			query = line.split(',')[0]
+			target = line.split(',')[1]
+			label = int(line.split(',')[2]) # 0 for not clone or 1 for clone
+
+			try:
+				argv_qt = copy.copy(argv_bak)
+                argv_qt.extend(['--clone', query, target])
+                sys.argv = copy.copy(argv_qt)
+                qt_json = eclone.main()
+
+                argv_qq = copy.copy(argv_bak)
+                argv_qq.extend(['--clone', query, query])
+                sys.argv = copy.copy(argv_qq)
+                qq_json = eclone.main()
+            except Exception as e:
+            	traceback.print_exc()
+            	continue
+
+            if qq_json["score"] == 0:
+            	continue
+            
+            # aliu: query-target / query-query
+            relative_similarity = qt_json["score"] / qq_json["score"]
+            if relative_similarity >= THRESHOLD:
+                result = 1 # identified as clones
+            else:
+                result = 0 # identified as not clones
 
 
 
