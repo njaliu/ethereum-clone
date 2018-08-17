@@ -5,75 +5,79 @@ import traceback
 import random
 import logging
 import eclone
+import datetime
 
 evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result"
 #evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime"
 evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
 #evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
 dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset"
+log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
 
 N_contracts = 1
 THRESHOLD = 0.5
 
 
 def prepare_contracts():
-	noopt = []
-	contract_dirs = os.listdir(evm_dir)
-	random.shuffle(contract_dirs)
-	for i in range(10):
-		d = os.path.join(evm_dir, contract_dirs[i])
-		print d
-		fs = os.listdir(d)
-		if len(fs) == 0:
-			continue
-		else:
-			seed = random.randint(0, len(fs) - 1)
-			if fs[seed].endswith("bin-runtime"):
-				f = os.path.join(d, fs[seed])
-				noopt.append(f)
+    noopt = []
+    contract_dirs = os.listdir(evm_dir)
+    random.shuffle(contract_dirs)
+    for i in range(10):
+        d = os.path.join(evm_dir, contract_dirs[i])
+        print d
+        fs = os.listdir(d)
+        if len(fs) == 0:
+            continue
+        else:
+            seed = random.randint(0, len(fs) - 1)
+            if fs[seed].endswith("bin-runtime"):
+                f = os.path.join(d, fs[seed])
+                noopt.append(f)
  
-	print noopt, len(noopt)
-	return noopt
+    print noopt, len(noopt)
+    return noopt
 
 def prepare_dataset(contracts, data_file, n_false):
-	with open(data_file, 'a+') as f:
-		for i in range(0, len(contracts)):
-			f_noopt = contracts[i]
-			f_opt = f_noopt.replace(evm_dir, evm_opt_dir)
-			data_true = f_noopt + ',' + f_opt + ',1\n'
-			f.write(data_true)
-		for i in range(0, n_false):
-			f_1 = contracts[i]
-			f_1_base = os.path.basename(f_1)
-			s = random.randint(0, len(contracts))
-			f_2 = contracts[s]
-			f_2_base = os.path.basename(f_2)
-			while f_1_base == f_2_base:
-				s = random.randint(0, len(contracts))
-				f_2 = contracts[s]
-				f_2_base = os.path.basename(f_2)
-			f_2 = f_2.replace(evm_dir, evm_opt_dir)
-			data_false = f_1 + ',' + f_2 + ',0\n'
-			f.write(data_false)
-	f.close()
-	print "Evaluation dataset finished: " + data_file
+    with open(data_file, 'a+') as f:
+        for i in range(0, len(contracts)):
+            f_noopt = contracts[i]
+            f_opt = f_noopt.replace(evm_dir, evm_opt_dir)
+            data_true = f_noopt + ',' + f_opt + ',1\n'
+            f.write(data_true)
+        for i in range(0, n_false):
+            f_1 = contracts[i]
+            f_1_base = os.path.basename(f_1)
+            s = random.randint(0, len(contracts))
+            f_2 = contracts[s]
+            f_2_base = os.path.basename(f_2)
+            while f_1_base == f_2_base:
+                s = random.randint(0, len(contracts))
+                f_2 = contracts[s]
+                f_2_base = os.path.basename(f_2)
+            f_2 = f_2.replace(evm_dir, evm_opt_dir)
+            data_false = f_1 + ',' + f_2 + ',0\n'
+            f.write(data_false)
+    f.close()
+    print "Evaluation dataset finished: " + data_file
 
 def run_evaluation():
-	with open(dataset_file, 'r') as f:
-		count = 0
-		# TODO: tp,tn,fp,fn
+    LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
+    with open(dataset_file, 'r') as f, open(LOG_FILE, 'a+') as lf:
+        count = 0
+        # TP, TN, FP (not clone, but identified as clone), FN (is clone, but identified as not clone)
+        tp, tn, fp, fn = 0, 0, 0, 0
 
-		
-		argv_bak = sys.argv
-		for line in f:
-			sys.argv = argv_bak
 
-			query = line.split(',')[0]
-			target = line.split(',')[1]
-			label = int(line.split(',')[2]) # 0 for not clone or 1 for clone
+        argv_bak = sys.argv
+        for line in f:
+            sys.argv = argv_bak
 
-			try:
-				argv_qt = copy.copy(argv_bak)
+            query = line.split(',')[0]
+            target = line.split(',')[1]
+            label = int(line.split(',')[2]) # 0 for not clone or 1 for clone
+
+            try:
+                argv_qt = copy.copy(argv_bak)
                 argv_qt.extend(['--clone', query, target])
                 sys.argv = copy.copy(argv_qt)
                 qt_json = eclone.main()
@@ -83,18 +87,47 @@ def run_evaluation():
                 sys.argv = copy.copy(argv_qq)
                 qq_json = eclone.main()
             except Exception as e:
-            	traceback.print_exc()
-            	continue
+                traceback.print_exc()
+                continue
 
             if qq_json["score"] == 0:
-            	continue
+                continue
             
             # aliu: query-target / query-query
             relative_similarity = qt_json["score"] / qq_json["score"]
             if relative_similarity >= THRESHOLD:
-                result = 1 # identified as clones
+                result_label = 1 # identified as clones
             else:
-                result = 0 # identified as not clones
+                result_label = 0 # identified as not clones
+
+            # aliu: compute TP, TN, FP, FN
+            result_type = "NA"
+            if result_label == label:
+                if label == 1:
+                    tp += 1
+                    result_type = "TP"
+                else:
+                    tn += 1
+                    result_type = "TN"
+            else:
+                if label == 1:
+                    fn += 1
+                    result_type = "FN"
+                else:
+                    fp += 1
+                    result_type = "FP"
+
+
+            count += 1
+            print "++++ iteration " + str(count) + " ++++"
+            lf.write(query + ',' + target + ',' + str(result_label) + ',' + result_type + '\n')
+
+        f.close()
+        lf.close()
+
+        print "++++ Evaluation Finished ++++"
+        print "number of tests: " + str(count)
+        print "TP: " + str(tp) + ", " + "TN: " + str(tn) + ", " + "FP: " + str(fp) + ", " + "FN: " + str(fn)
 
 
 
@@ -128,17 +161,17 @@ def fse_eval():
                 sys.argv = copy.copy(argv_qq)
                 qq_json = eclone.main()
             except Exception as e:
-            	traceback.print_exc()
-            	continue
+                traceback.print_exc()
+                continue
 
             if qq_json["score"] == 0:
-            	continue
+                continue
             
             # aliu: query-target / query-query
             relative_similarity = qt_json["score"] / qq_json["score"]
 
             if relative_similarity >= THRESHOLD:
-            	print("Relative Similarity: " + str(relative_similarity))
+                print("Relative Similarity: " + str(relative_similarity))
                 print("Clone Found: " + query + ", " + target)
                 correct += 1
             else:
@@ -159,7 +192,8 @@ def fse_eval():
 
 
 if __name__ == '__main__':
-	picked = prepare_contracts()
-	prepare_dataset(picked, dataset_file, 4)
+    #picked = prepare_contracts()
+    #prepare_dataset(picked, dataset_file, 4)
+    run_evaluation()
     #out = fse_eval()
     #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))

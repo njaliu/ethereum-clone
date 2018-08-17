@@ -604,7 +604,8 @@ def sym_exec_block(params):
     log.debug("STACK: " + str(stack))
 
     # aliu: update the path condition of this block
-    vertices[block].set_path_condition(path_conditions_and_vars["path_condition"])
+    if block in vertices: # aliu: in case of block 0 leading to a KeyError
+        vertices[block].set_path_condition(path_conditions_and_vars["path_condition"])
     #log.info("Block path condition: " + str(vertices[block].get_path_condition()))
 
     current_edge = Edge(pre_block, block)
