@@ -70,7 +70,7 @@ def prepare_dataset(contracts, data_file, n_false):
 
 def run_evaluation():
     LOG_FILE = log_dir + 'LOG_' + str(THRESHOLD) + '_' + datetime.datetime.today().strftime('%Y-%m-%d')
-    with open(dataset_file, 'r') as f, open(LOG_FILE, 'a+') as lf:
+    with open(dataset_file + "_" + datetime.datetime.today().strftime('%Y-%m-%d'), 'r') as f, open(LOG_FILE, 'a+') as lf:
         count = 0
         # TP, TN, FP (not clone, but identified as clone), FN (is clone, but identified as not clone)
         tp, tn, fp, fn = 0, 0, 0, 0
