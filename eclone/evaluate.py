@@ -14,7 +14,10 @@ evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-r
 dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset"
 log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
 
+# evaluation configuration
 N_contracts = 1
+N_CLONE = 1000
+N_NON_CLONE = 1000
 THRESHOLD = 0.5
 
 
@@ -22,19 +25,20 @@ def prepare_contracts():
     noopt = []
     contract_dirs = os.listdir(evm_dir)
     random.shuffle(contract_dirs)
-    for i in range(10):
+    for i in range(N_CLONE):
         d = os.path.join(evm_dir, contract_dirs[i])
         print d
         fs = os.listdir(d)
         if len(fs) == 0:
             continue
         else:
-            seed = random.randint(0, len(fs) - 1)
+            seed = random.randint(0, len(fs)-1)
             if fs[seed].endswith("bin-runtime"):
                 f = os.path.join(d, fs[seed])
                 noopt.append(f)
  
-    print noopt, len(noopt)
+    #print noopt, len(noopt)
+    print "## Total number of CLONES: " + str(len(noopt))
     return noopt
 
 def prepare_dataset(contracts, data_file, n_false):
@@ -45,13 +49,15 @@ def prepare_dataset(contracts, data_file, n_false):
             data_true = f_noopt + ',' + f_opt + ',1\n'
             f.write(data_true)
         for i in range(0, n_false):
+            if i >= len(contracts):
+                break
             f_1 = contracts[i]
             f_1_base = os.path.basename(f_1)
-            s = random.randint(0, len(contracts))
+            s = random.randint(0, len(contracts)-1)
             f_2 = contracts[s]
             f_2_base = os.path.basename(f_2)
             while f_1_base == f_2_base:
-                s = random.randint(0, len(contracts))
+                s = random.randint(0, len(contracts)-1)
                 f_2 = contracts[s]
                 f_2_base = os.path.basename(f_2)
             f_2 = f_2.replace(evm_dir, evm_opt_dir)
@@ -59,9 +65,11 @@ def prepare_dataset(contracts, data_file, n_false):
             f.write(data_false)
     f.close()
     print "Evaluation dataset finished: " + data_file
+    print "# of CLONES: " + str(len(contracts))
+    print "# of NON-CLONES: " + str(i)
 
 def run_evaluation():
-    LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
+    LOG_FILE = log_dir + 'LOG_' + str(THRESHOLD) + '_' + datetime.datetime.today().strftime('%Y-%m-%d')
     with open(dataset_file, 'r') as f, open(LOG_FILE, 'a+') as lf:
         count = 0
         # TP, TN, FP (not clone, but identified as clone), FN (is clone, but identified as not clone)
@@ -119,7 +127,7 @@ def run_evaluation():
 
 
             count += 1
-            print "++++ iteration " + str(count) + " ++++"
+            print "\n++++ iteration " + str(count) + " ++++\n"
             lf.write(query + ',' + target + ',' + str(result_label) + ',' + result_type + '\n')
 
         f.close()
@@ -193,7 +201,7 @@ def fse_eval():
 
 if __name__ == '__main__':
     #picked = prepare_contracts()
-    #prepare_dataset(picked, dataset_file, 4)
+    #prepare_dataset(picked, dataset_file + "_" + datetime.datetime.today().strftime('%Y-%m-%d'), N_NON_CLONE)
     run_evaluation()
     #out = fse_eval()
     #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
