@@ -6,6 +6,8 @@ import random
 import logging
 import eclone
 import datetime
+import faulthandler
+faulthandler.enable()
 
 evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result"
 #evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime"

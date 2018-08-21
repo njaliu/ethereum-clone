@@ -84,3 +84,4 @@ ples/mislock.sol:EtherBank4.evm.disasm
 ./score-lm/tests/SimpleBank.bin-runtime.disasm
 ./score-lm/tests/SimpleBank.sol:SimpleBank.evm.disasm
 e/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result/0x871aE94d2375f7A0D2fA584d0201c67eD2D35103.txt/DigiPulse.bin-runtime.disasm
+e/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result/0x871aE94d2375f7A0D2fA584d0201c67eD2D35103.txt/DigiPulse.bin-runtime.disasm
