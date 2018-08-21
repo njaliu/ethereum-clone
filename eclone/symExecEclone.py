@@ -27,6 +27,8 @@ from vulnerability import CallStack, TimeDependency, MoneyConcurrency, Reentranc
 import global_params
 
 log = logging.getLogger(__name__)
+def logging_info(content):
+    print "LOG_INFO:symExecEclone: " + content
 
 UNSIGNED_BOUND_NUMBER = 2**256 - 1
 CONSTANT_ONES_159 = BitVecVal((1 << 160) - 1, 256)
@@ -578,7 +580,7 @@ def sym_exec_block(params):
     global source_map
 
     # aliu
-    log.info("++ current function: " + str(current_function))
+    logging_info("++ current function: " + str(current_function))
     
     block = params.block
     pre_block = params.pre_block
@@ -837,8 +839,9 @@ def sym_exec_ins(params):
     if instr_parts[0] == "CALL" and analysis["reentrancy_bug"] and analysis["reentrancy_bug"][-1]:
         global_problematic_pcs["reentrancy_bug"].append(global_state["pc"])
 
-    log.info("==============================")
-    log.info("EXECUTING: " + instr)
+    # aliu: EClone debug information
+    #logging_info("==============================")
+    #logging_info("EXECUTING: " + instr)
 
     #
     #  0s: Stop and Arithmetic Operations

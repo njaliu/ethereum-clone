@@ -11,13 +11,13 @@ evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runti
 #evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime"
 evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
 #evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
-dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset"
+dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_3000"
 log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
 
 # evaluation configuration
 N_contracts = 1
-N_CLONE = 1000
-N_NON_CLONE = 1000
+N_CLONE = 3000
+N_NON_CLONE = 3000
 THRESHOLD = 0.5
 
 
@@ -69,12 +69,11 @@ def prepare_dataset(contracts, data_file, n_false):
     print "# of NON-CLONES: " + str(i)
 
 def run_evaluation():
-    LOG_FILE = log_dir + 'LOG_' + str(THRESHOLD) + '_' + datetime.datetime.today().strftime('%Y-%m-%d')
-    with open(dataset_file + "_" + datetime.datetime.today().strftime('%Y-%m-%d'), 'r') as f, open(LOG_FILE, 'a+') as lf:
+    LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
+    with open(dataset_file, 'r') as f, open(LOG_FILE, 'a+') as lf:
         count = 0
         # TP, TN, FP (not clone, but identified as clone), FN (is clone, but identified as not clone)
         tp, tn, fp, fn = 0, 0, 0, 0
-
 
         argv_bak = sys.argv
         for line in f:
@@ -128,13 +127,14 @@ def run_evaluation():
 
             count += 1
             print "\n++++ iteration " + str(count) + " ++++\n"
-            lf.write(query + ',' + target + ',' + str(result_label) + ',' + result_type + '\n')
+            # LOG_FILE: query, target, relative_similarity, result_label, result_type
+            lf.write(query + ',' + target + ',' + str(relative_similarity) + ',' + str(result_label) + ',' + result_type + '\n')
 
         f.close()
         lf.close()
 
         print "++++ Evaluation Finished ++++"
-        print "number of tests: " + str(count)
+        print "number of tests: " + str(count) + ", threshold: " + str(THRESHOLD)
         print "TP: " + str(tp) + ", " + "TN: " + str(tn) + ", " + "FP: " + str(fp) + ", " + "FN: " + str(fn)
 
 
@@ -201,7 +201,7 @@ def fse_eval():
 
 if __name__ == '__main__':
     #picked = prepare_contracts()
-    #prepare_dataset(picked, dataset_file + "_" + datetime.datetime.today().strftime('%Y-%m-%d'), N_NON_CLONE)
+    #prepare_dataset(picked, dataset_file, N_NON_CLONE)
     run_evaluation()
     #out = fse_eval()
     #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
