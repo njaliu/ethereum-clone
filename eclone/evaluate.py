@@ -13,7 +13,8 @@ evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runti
 #evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime"
 evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
 #evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
-dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_3000"
+dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000"
+dataset_file_random = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000_random"
 log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
 
 # evaluation configuration
@@ -37,7 +38,9 @@ def prepare_contracts():
             seed = random.randint(0, len(fs)-1)
             if fs[seed].endswith("bin-runtime"):
                 f = os.path.join(d, fs[seed])
-                noopt.append(f)
+                fsize = os.path.getsize(f) / 1024
+                if fsize <= 15 and fsize > 0:
+                	noopt.append(f)
  
     #print noopt, len(noopt)
     print "## Total number of CLONES: " + str(len(noopt))
@@ -70,9 +73,20 @@ def prepare_dataset(contracts, data_file, n_false):
     print "# of CLONES: " + str(len(contracts))
     print "# of NON-CLONES: " + str(i)
 
+def shuffle_dataset():
+	with open(dataset_file, 'r') as f, open(dataset_file_random, 'a+') as rf:
+		origin_lines = f.readlines()
+		random.shuffle(origin_lines)
+		for line in origin_lines:
+			rf.write(line)
+		f.close()
+		rf.close()
+		print "Dataset shuffled: " + dataset_file_random
+		print "## Total number of CLONES: " + str(len(origin_lines))
+
 def run_evaluation():
     LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
-    with open(dataset_file, 'r') as f, open(LOG_FILE, 'a+') as lf:
+    with open(dataset_file_random, 'r') as f, open(LOG_FILE, 'a+') as lf:
         count = 0
         # TP, TN, FP (not clone, but identified as clone), FN (is clone, but identified as not clone)
         tp, tn, fp, fn = 0, 0, 0, 0
@@ -204,6 +218,7 @@ def fse_eval():
 if __name__ == '__main__':
     #picked = prepare_contracts()
     #prepare_dataset(picked, dataset_file, N_NON_CLONE)
+    #shuffle_dataset()
     run_evaluation()
     #out = fse_eval()
     #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
