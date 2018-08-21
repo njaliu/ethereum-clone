@@ -2428,7 +2428,7 @@ def similarity_scoring(contract1, contract2):
     contract_semantic_1 = generate_semantics(contract1)
     contract_semantic_2 = generate_semantics(contract2)
     similarity_score = ecloneAnalysis.contract_similarity(contract_semantic_1, contract_semantic_2)
-    log.info("Similarity Score: " + str(similarity_score))
+    logging_info("Similarity Score: " + str(similarity_score))
     #return similarity_score
     return {"score": similarity_score, "nquery": len(contract_semantic_1.keys()), "ntarget": len(contract_semantic_2.keys())}
 
@@ -2457,11 +2457,12 @@ def generate_semantics(contract, _source_map = None):
     log.info("Generating semantics, please wait...")
 
     if not isTesting():
-        log.info("\t============ Results ===========")
+        #log.info("\t============ Results ===========")
+        logging_info("\t============ Results ===========")
 
     try:
         semantics_out = build_cfg_and_analyze()
-        log.debug("Done Symbolic execution")
+        print "Done Symbolic execution"
         # print_cfg()
     except Exception as e:
         if global_params.UNIT_TEST == 2 or global_params.UNIT_TEST == 3:
@@ -2491,16 +2492,18 @@ def main(contract, contract_sol, _source_map = None):
     if global_params.UNIT_TEST == 2 or global_params.UNIT_TEST == 3:
         global_params.GLOBAL_TIMEOUT = global_params.GLOBAL_TIMEOUT_TEST
     signal.alarm(global_params.GLOBAL_TIMEOUT)
-    atexit.register(closing_message)
+    #atexit.register(closing_message)
 
-    log.info("Running, please wait...")
+    #log.info("Running, please wait...")
+    logging_info("Running, please wait...")
 
     if not isTesting():
-        log.info("\t============ Results ===========")
+        #log.info("\t============ Results ===========")
+        logging_info("\t============ Results ===========")
 
     try:
         build_cfg_and_analyze()
-        log.debug("Done Symbolic execution")
+        print "Done Symbolic execution"
         # print_cfg()
     except Exception as e:
         if global_params.UNIT_TEST == 2 or global_params.UNIT_TEST == 3:
@@ -2508,8 +2511,9 @@ def main(contract, contract_sol, _source_map = None):
             exit(EXCEPTION)
         traceback.print_exc()
         raise e
-    finally:
-        return detect_vulnerabilities()
+    # aliu: disable vuln detection
+    #finally:
+    #   return detect_vulnerabilities()
     signal.alarm(0)
 
 if __name__ == '__main__':

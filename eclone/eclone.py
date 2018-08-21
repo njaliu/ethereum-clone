@@ -277,8 +277,8 @@ def main():
         remove_temporary_file(processed_evm_file_target)
         
 
-        logging.info("clone A: " + args.clone[0])
-        logging.info("clone B: " + args.clone[1])
+        #print("clone A: " + args.clone[0])
+        #print("clone B: " + args.clone[1])
 
         return result_json
     # aliu: when --clone is not set  
