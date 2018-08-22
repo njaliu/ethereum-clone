@@ -14,7 +14,7 @@ evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runti
 evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
 #evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
 dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000"
-dataset_file_random = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000_random"
+dataset_file_random = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000_random_24"
 log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
 
 # evaluation configuration
