@@ -40,7 +40,7 @@ def prepare_contracts():
                 f = os.path.join(d, fs[seed])
                 fsize = os.path.getsize(f) / 1024
                 if fsize <= 15 and fsize > 0:
-                	noopt.append(f)
+                    noopt.append(f)
  
     #print noopt, len(noopt)
     print "## Total number of CLONES: " + str(len(noopt))
@@ -74,15 +74,15 @@ def prepare_dataset(contracts, data_file, n_false):
     print "# of NON-CLONES: " + str(i)
 
 def shuffle_dataset():
-	with open(dataset_file, 'r') as f, open(dataset_file_random, 'a+') as rf:
-		origin_lines = f.readlines()
-		random.shuffle(origin_lines)
-		for line in origin_lines:
-			rf.write(line)
-		f.close()
-		rf.close()
-		print "Dataset shuffled: " + dataset_file_random
-		print "## Total number of CLONES: " + str(len(origin_lines))
+    with open(dataset_file, 'r') as f, open(dataset_file_random, 'a+') as rf:
+        origin_lines = f.readlines()
+        random.shuffle(origin_lines)
+        for line in origin_lines:
+            rf.write(line)
+        f.close()
+        rf.close()
+        print "Dataset shuffled: " + dataset_file_random
+        print "## Total number of CLONES: " + str(len(origin_lines))
 
 def run_evaluation():
     LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
@@ -93,7 +93,7 @@ def run_evaluation():
 
         argv_bak = sys.argv
         for line in f:
-        	print "\n Processing: " + line + "\n"
+            print "\n Processing: " + line + "\n"
 
             sys.argv = argv_bak
 
