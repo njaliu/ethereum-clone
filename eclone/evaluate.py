@@ -93,6 +93,8 @@ def run_evaluation():
 
         argv_bak = sys.argv
         for line in f:
+        	print "\n Processing: " + line + "\n"
+
             sys.argv = argv_bak
 
             query = line.split(',')[0]

@@ -304,6 +304,9 @@ def compute_best_match(query, target):
         if p > best:
             best = p
 
+    if best <= 0 or p_H0 <= 0:
+        return 0
+
     return math.log(best / float(p_H0))
 
 # aliu: contract1/contract2 - Dictionary: {block: {"metadata": meta_data, "birthmark": birth_mark}}
