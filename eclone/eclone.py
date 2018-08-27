@@ -196,6 +196,9 @@ def main():
     parser.add_argument( "-gb",  "--globalblockchain",    help="Integrate with the global ethereum blockchain", action="store_true")
     parser.add_argument( "-gtc", "--generate-test-cases", help="Generate test cases each branch of symbolic execution tree", action="store_true")
 
+    # aliu: -o for eclone
+    parser.add_argument( "-o",   "--output",       help="Output file for clone detection.", action="store", dest="output", type=str)
+
     
 
     args = parser.parse_args()
@@ -276,6 +279,13 @@ def main():
         remove_temporary_file(disasm_file_target)
         remove_temporary_file(processed_evm_file_target)
         
+        # aliu: dump clone detection result into a log file
+        if args.output:
+            out_log = args.output
+            with open(out_log, 'a+', 0) as f_log:
+                f_log.write(query + ',' + target + ',' + str(result_json["score"]) + '\n')
+                f_log.close()
+            logging.info("Logging finished!")
 
         #print("clone A: " + args.clone[0])
         #print("clone B: " + args.clone[1])

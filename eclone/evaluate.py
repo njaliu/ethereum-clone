@@ -5,6 +5,7 @@ import traceback
 import random
 import logging
 import eclone
+import subprocess
 import datetime
 import faulthandler
 faulthandler.enable()
@@ -16,6 +17,7 @@ evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-r
 dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000"
 dataset_file_random = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000_random"
 log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
+ECLONE_MAIN = "/home/aliu/Research/Projects/ethereum-clone/eclone/eclone.py"
 
 # evaluation configuration
 N_contracts = 1
@@ -156,6 +158,30 @@ def run_evaluation():
         print "TP: " + str(tp) + ", " + "TN: " + str(tn) + ", " + "FP: " + str(fp) + ", " + "FN: " + str(fn)
 
 
+def run_evaluation_cmd():
+    LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
+    with open(dataset_file_random, 'r') as f:
+        count = 0
+
+        for line in f:
+            print "\n Processing: " + line + "\n"
+
+            query = line.split(',')[0]
+            target = line.split(',')[1]
+
+            try:
+            	retcode = subprocess.call(['python', ECLONE_MAIN, '--clone', query, target, '-o', LOG_FILE])
+            	count += 1
+            except Exception as e:
+                traceback.print_exc()
+                continue
+
+            print "\n++++ iteration " + str(count) + " ++++\n"
+
+        f.close()
+
+        print "++++ Evaluation Finished ++++"
+        print "number of tests: " + str(count) + ", threshold: " + str(THRESHOLD)
 
 
 def fse_eval():
@@ -219,6 +245,7 @@ def fse_eval():
 
 # USAGE:
 #   python evaluate.py NEW (generate new dataset file), or
+#   python evaluate.py SHELL (run evaluation in shell mode), or
 #   python evaluate.py (run evaluation)
 if __name__ == '__main__':
 	if len(sys.argv) == 2:
@@ -227,6 +254,8 @@ if __name__ == '__main__':
 			picked = prepare_contracts()
 			prepare_dataset(picked, dataset_file, N_NON_CLONE)
 			shuffle_dataset()
+		elif flag == "SHELL":
+			run_evaluation_cmd()
 	elif len(sys.argv) == 1:
 		run_evaluation()
 	else:
