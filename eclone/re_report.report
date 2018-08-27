@@ -88,3 +88,4 @@ e/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result/0x871
 e/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result/0xc2ca6459ee94aaca86ebdad775eb2a0ba55081d4.txt/Crowdsale.bin-runtime.disasm
 ./eclone-eval/datafile/0xdf68995f07882120b44da1d0fabf41ca1681deec.sol:ProvideToken.evm.disasm
 ./eclone-eval/datafile/0xdf68995f07882120b44da1d0fabf41ca1681deec.sol:ProvideToken.evm.disasm
+e/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime/result/0xc2abf025ede7e9a9ece17d7b0bfd51c5a2a79172.txt/LightFundsRegistry.bin-runtime.disasm

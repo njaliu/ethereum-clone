@@ -14,7 +14,7 @@ evm_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runti
 evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize/result"
 #evm_opt_dir = "/home/aliu/Research/Projects/eclone-eval/evm-bytecode-clone/bin-runtime-optimize"
 dataset_file = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000"
-dataset_file_random = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000_random_24"
+dataset_file_random = "/home/aliu/Research/Projects/eclone-eval/datafile/dataset_le15K_3000_random"
 log_dir = "/home/aliu/Research/Projects/eclone-eval/datafile/"
 
 # evaluation configuration
@@ -86,7 +86,7 @@ def shuffle_dataset():
 
 def run_evaluation():
     LOG_FILE = log_dir + 'LOG_' + datetime.datetime.today().strftime('%Y-%m-%d')
-    with open(dataset_file_random, 'r') as f, open(LOG_FILE, 'a+') as lf:
+    with open(dataset_file_random, 'r') as f, open(LOG_FILE, 'a+', 0) as lf:
         count = 0
         # TP, TN, FP (not clone, but identified as clone), FN (is clone, but identified as not clone)
         tp, tn, fp, fn = 0, 0, 0, 0
@@ -217,10 +217,19 @@ def fse_eval():
     print("EClone Accuracy: " + str( correct / float(count) ))
 
 
+# USAGE:
+#   python evaluate.py NEW (generate new dataset file), or
+#   python evaluate.py (run evaluation)
 if __name__ == '__main__':
-    #picked = prepare_contracts()
-    #prepare_dataset(picked, dataset_file, N_NON_CLONE)
-    #shuffle_dataset()
-    run_evaluation()
+	if len(sys.argv) == 2:
+		flag = sys.argv[1]
+		if flag == "NEW":
+			picked = prepare_contracts()
+			prepare_dataset(picked, dataset_file, N_NON_CLONE)
+			shuffle_dataset()
+	elif len(sys.argv) == 1:
+		run_evaluation()
+	else:
+		print "Invalid arguments!"
     #out = fse_eval()
     #print("EClone Accuracy: " + str( out["correct"] / float(out["total"]) ))
