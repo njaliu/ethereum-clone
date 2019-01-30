@@ -30,6 +30,7 @@ OPCODE_TYPE = {
 sigma = 0.1
 
 def analyzeBlock(block):
+    func_hash = ""
     path_condition_meta = 0
     arithmetic_meta = 0
     logic_meta = 0
@@ -54,6 +55,8 @@ def analyzeBlock(block):
     use_call = 0 # aliu: use-call count
     call_finalize = 0 # aliu: call-finalize count
     
+    if hasattr(block, 'func_hash'):
+        func_hash = block.get_function_hash()
     if hasattr(block, 'path_condition'):
         path_condition_meta = 1
     try:
@@ -218,7 +221,7 @@ def analyzeBlock(block):
 
     birth_mark = BirthMark(pc_cantor, def_cantor, use_cantor, call_count, du_cantor, uu_cantor, update_call, use_call, call_finalize)
 
-    return {"metadata": meta_data, "birthmark": birth_mark}
+    return {"func_hash": func_hash, "metadata": meta_data, "birthmark": birth_mark}
 
 # aliu: cantor pairing function
 def compute_cantor(k1, k2):
@@ -311,8 +314,16 @@ def compute_best_match(query, target):
 
 # aliu: contract1/contract2 - Dictionary: {block: {"metadata": meta_data, "birthmark": birth_mark}}
 def contract_similarity(contract1, contract2):
+    similarity_1_1 = 0
+    similarity_2_2 = 0
     similarity_1_2 = 0
     similarity_2_1 = 0
+
+    for b1 in contract1.keys():
+        similarity_1_1 += compute_best_match(contract1[b1], contract1)
+
+    for b2 in contract2.keys():
+        similarity_2_2 += compute_best_match(contract2[b2], contract2)
 
     for b1 in contract1.keys():
         similarity_1_2 += compute_best_match(contract1[b1], contract2)
@@ -320,7 +331,38 @@ def contract_similarity(contract1, contract2):
     for b2 in contract2.keys():
         similarity_2_1 += compute_best_match(contract2[b2], contract1)
 
-    return max(similarity_1_2, similarity_2_1)
+    return max(similarity_1_2, similarity_2_1), max(similarity_1_1, similarity_2_2)
+
+# aliu: function-level
+# contract1: query, contract2: target, func_hash: hash of the vulnerable function
+def search_vulnerable_func(contract1, contract2, func_hash):
+    print contract2
+    vuln = { k: contract2[k] for k in contract2.keys() if contract2[k]["func_hash"] == func_hash }
+    print vuln
+
+    funcs = {}
+    hashes = []
+    for k in contract1.keys():
+        h = contract1[k]["func_hash"] 
+        if h == "xxx":
+            continue
+        if h in hashes:
+            funcs[h][k] = contract1[k]
+        else:
+            funcs[h] = {}
+            hashes.append(h)
+
+    scores = {}
+    for h in funcs.keys():
+        relative, baseline = contract_similarity(funcs[h], vuln)
+        if baseline == 0:
+            scores[h] = 0
+        scores[h] = relative / float(baseline)
+
+    rank = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+
+    return rank
+
 
 def main(vertices):
     log.info("EClone started!")

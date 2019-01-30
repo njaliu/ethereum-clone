@@ -605,8 +605,9 @@ def sym_exec_block(params):
     log.debug("Reach block address %d \n", block)
     log.debug("STACK: " + str(stack))
 
-    # aliu: update the path condition of this block
+    # aliu: update the function hash and path condition of this block
     if block in vertices: # aliu: in case of block 0 leading to a KeyError
+        vertices[block].set_function_hash(current_function)
         vertices[block].set_path_condition(path_conditions_and_vars["path_condition"])
     #log.info("Block path condition: " + str(vertices[block].get_path_condition()))
 
@@ -2427,11 +2428,20 @@ def handler(signum, frame):
 def similarity_scoring(contract1, contract2):
     contract_semantic_1 = generate_semantics(contract1)
     contract_semantic_2 = generate_semantics(contract2)
-    similarity_score = ecloneAnalysis.contract_similarity(contract_semantic_1, contract_semantic_2)
+    relative_score, self_score = ecloneAnalysis.contract_similarity(contract_semantic_1, contract_semantic_2)
+    similarity_score = relative_score / float(self_score)
+    #similarity_score = ecloneAnalysis.contract_similarity(contract_semantic_1, contract_semantic_2)
     logging_info("Similarity Score: " + str(similarity_score))
     #return similarity_score
     return {"score": similarity_score, "nquery": len(contract_semantic_1.keys()), "ntarget": len(contract_semantic_2.keys())}
 
+def rank_similar_func(contract1, contract2, func_hash):
+    contract_semantic_1 = generate_semantics(contract1)
+    contract_semantic_2 = generate_semantics(contract2)
+    rank = ecloneAnalysis.search_vulnerable_func(contract_semantic_1, contract_semantic_2, func_hash)
+    logging_info("Similarity Rank: " + str(rank))
+    return rank
+    
 def generate_semantics(contract, _source_map = None):
     global c_name
     #global c_name_sol

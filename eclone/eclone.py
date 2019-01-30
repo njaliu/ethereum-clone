@@ -129,6 +129,28 @@ def analyze_clone(processed_evm_file_q, disasm_file_q, processed_evm_file_t, dis
     # Run symExecEclone
     return symExecEclone.similarity_scoring(disasm_file_q, disasm_file_t)
 
+def analyze_clone_vuln(processed_evm_file_q, disasm_file_q, processed_evm_file_t, disasm_file_t, func_hash, source_map = None):
+    disasm_out_q = ""
+    disasm_out_t = ""
+    try:
+        disasm_p_q = subprocess.Popen(
+            ["evm", "disasm", processed_evm_file_q], stdout=subprocess.PIPE)
+        disasm_out_q = disasm_p_q.communicate()[0].decode()
+        disasm_p_t = subprocess.Popen(
+            ["evm", "disasm", processed_evm_file_t], stdout=subprocess.PIPE)
+        disasm_out_t = disasm_p_t.communicate()[0].decode()
+    except:
+        logging.critical("Disassembly failed.")
+        exit()
+
+    with open(disasm_file_q, 'w') as ofq:
+        ofq.write(disasm_out_q)
+    with open(disasm_file_t, 'w') as oft:
+        oft.write(disasm_out_t)
+
+    # Run symExecEclone
+    return symExecEclone.rank_similar_func(disasm_file_q, disasm_file_t, func_hash)
+
 def analyze(processed_evm_file, disasm_file, source_map = None):
     disasm_out = ""
     try:
@@ -198,6 +220,7 @@ def main():
 
     # aliu: -o for eclone
     parser.add_argument( "-o",   "--output",       help="Output file for clone detection.", action="store", dest="output", type=str)
+    parser.add_argument( "-vu",   "--vuln",       help="Hash of the vulnerable function.", action="store", dest="vuln", type=str)
 
     
 
@@ -272,7 +295,10 @@ def main():
             ft.write(removeSwarmHash(evm_target))
 
         # aliu: {"score": x, "nquery": y, "ntarget": z}
-        result_json = analyze_clone(processed_evm_file_query, disasm_file_query, processed_evm_file_target, disasm_file_target)
+        if args.vuln:
+            analyze_clone_vuln(processed_evm_file_query, disasm_file_query, processed_evm_file_target, disasm_file_target, args.vuln)
+        else:
+            result_json = analyze_clone(processed_evm_file_query, disasm_file_query, processed_evm_file_target, disasm_file_target)
 
         remove_temporary_file(disasm_file_query)
         remove_temporary_file(processed_evm_file_query)
@@ -280,17 +306,19 @@ def main():
         remove_temporary_file(processed_evm_file_target)
         
         # aliu: dump clone detection result into a log file
-        if args.output:
+        if args.output and not args.vuln:
             out_log = args.output
             with open(out_log, 'a+', 0) as f_log:
                 f_log.write(query + ',' + target + ',' + str(result_json["score"]) + '\n')
                 f_log.close()
             logging.info("Logging finished!")
 
+            return result_json
+
         #print("clone A: " + args.clone[0])
         #print("clone B: " + args.clone[1])
 
-        return result_json
+        
     # aliu: when --clone is not set  
     elif args.bytecode:
         processed_evm_file = args.source + '.1'

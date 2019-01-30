@@ -57,6 +57,14 @@ class BasicBlock:
     def get_branch_expression(self):
         return self.branch_expression
 
+    # aliu: set the function hash for a basic block
+    def set_function_hash(self, func_hash):
+        self.func_hash = func_hash
+
+    # aliu: set the function hash for a basic block
+    def get_function_hash(self):
+        return self.func_hash
+
     # aliu: set the path condition for a basic block
     def set_path_condition(self, path):
         self.path_condition = path
